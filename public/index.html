@@ -1,0 +1,337 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PizzaPilot AI | Business Dashboard</title>
+<style>
+:root{--bg:#f4f6fb;--dark:#172033;--muted:#778197;--primary:#635bff;--green:#12a875;--line:#e8ebf2;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--dark);font-family:Arial,sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:9px;padding:11px 15px;background:var(--primary);color:white;font-weight:700}
+button.secondary{background:#eef0ff;color:var(--primary)}
+button.danger{background:#fff0f0;color:#d34b4b}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:9px;background:white;outline:none}
+input:focus,select:focus{border-color:var(--primary)}
+.auth{max-width:430px;margin:7vh auto;padding:28px;background:white;border-radius:18px;box-shadow:0 12px 40px #1b285015}
+.logo{font-size:25px;font-weight:900;color:var(--primary);margin-bottom:8px}
+.sub{color:var(--muted);font-size:14px;line-height:1.5}
+.field{margin:13px 0}
+.field label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}
+.full{width:100%}
+.link{color:var(--primary);cursor:pointer;font-weight:700}
+#app{display:none}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:230px;background:#171d32;color:white;padding:24px 15px;flex-shrink:0}
+.sidebar .logo{color:white;padding:0 10px 22px}
+.nav{display:block;width:100%;text-align:left;background:transparent;color:#c8cde0;margin:4px 0;padding:13px;border-radius:9px}
+.nav.active,.nav:hover{background:#303754;color:white}
+.main{flex:1;min-width:0;padding:26px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:25px}
+h1{font-size:25px;margin:0 0 7px}
+h2{font-size:18px;margin:0 0 17px}
+.muted{color:var(--muted);font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin:20px 0}
+.card,.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:19px}
+.metric{font-size:27px;font-weight:800;margin-top:12px}
+.metric-label{font-size:13px;color:var(--muted)}
+.panel{margin:17px 0;overflow:hidden}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--line);font-size:13px}
+th{color:var(--muted);font-weight:700}
+.tag{display:inline-block;background:#eef8f3;color:#13885f;padding:5px 9px;border-radius:20px;font-size:11px}
+.tag.pending{background:#fff5df;color:#a66a00}
+.tag.cancel{background:#fff0f0;color:#c44}
+.hidden{display:none!important}
+.message{padding:11px;border-radius:9px;margin:12px 0;font-size:13px;display:none}
+.message.error{display:block;background:#fff0f0;color:#b52c2c}
+.message.ok{display:block;background:#eafaf2;color:#08794f}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:850px){.cards{grid-template-columns:repeat(2,1fr)}.sidebar{width:185px}}
+@media(max-width:600px){.layout{display:block}.sidebar{width:100%;padding:12px}.sidebar .logo{padding:5px 8px}.navs{display:flex;overflow:auto;gap:5px}.nav{white-space:nowrap;width:auto;margin:0;padding:10px}.main{padding:16px}.cards{gap:9px}.card{padding:13px}.metric{font-size:22px}.grid2{grid-template-columns:1fr}.top{align-items:flex-start}.auth{margin:20px 12px;padding:22px}}
+</style>
+</head>
+<body>
+
+<section id="authScreen" class="auth">
+  <div class="logo">⚡ PizzaPilot AI</div>
+  <p class="sub">Your smart business management platform. Register your restaurant or sign in to your dashboard.</p>
+  <div id="registerFields">
+    <div class="field"><label>Business name</label><input id="businessName" placeholder="e.g. Pizza House"></div>
+    <div class="field"><label>Business type</label>
+      <select id="businessType"><option>Pizza Shop</option><option>Restaurant</option><option>Fast Food</option><option>Cafe</option><option>Bakery</option><option>Other</option></select>
+    </div>
+    <div class="field"><label>Owner name</label><input id="ownerName" placeholder="Your name"></div>
+    <div class="field"><label>WhatsApp phone (optional)</label><input id="phone" placeholder="+92..."></div>
+  </div>
+  <div class="field"><label>Email</label><input id="email" type="email" placeholder="you@example.com"></div>
+  <div class="field"><label>Password (minimum 8 characters)</label><input id="password" type="password" placeholder="Enter password"></div>
+  <div id="authMessage" class="message"></div>
+  <button class="full" id="authButton" onclick="submitAuth()">Create business account</button>
+  <p class="sub" style="text-align:center;margin-top:18px"><span id="switchText">Already registered?</span> <span class="link" onclick="toggleAuth()" id="switchLink">Login</span></p>
+  <p class="muted" style="text-align:center">Each business account has its own separate products and orders.</p>
+</section>
+
+<div id="app">
+ <div class="layout">
+  <aside class="sidebar">
+   <div class="logo">⚡ PizzaPilot</div>
+   <div class="navs">
+    <button class="nav active" onclick="showPage('dashboard',this)">▦ Dashboard</button>
+    <button class="nav" onclick="showPage('products',this)">🍕 Products</button>
+    <button class="nav" onclick="showPage('orders',this)">🧾 Orders</button>
+    <button class="nav" onclick="showPage('customers',this)">👥 Customers</button>
+    <button class="nav" onclick="showPage('settings',this)">⚙ Settings</button>
+   </div>
+  </aside>
+
+  <main class="main">
+   <div class="top">
+    <div><h1 id="pageTitle">Dashboard</h1><div class="muted" id="businessLabel">Business overview</div></div>
+    <button class="secondary" onclick="logout()">Logout</button>
+   </div>
+
+   <section id="page-dashboard">
+    <div class="cards">
+     <div class="card"><div class="metric-label">Total Revenue</div><div class="metric" id="revenue">Rs 0</div></div>
+     <div class="card"><div class="metric-label">Total Orders</div><div class="metric" id="orderCount">0</div></div>
+     <div class="card"><div class="metric-label">Products</div><div class="metric" id="productCount">0</div></div>
+     <div class="card"><div class="metric-label">Customers</div><div class="metric" id="customerCount">0</div></div>
+    </div>
+    <div class="card"><div class="metric-label">Low stock products (5 or fewer)</div><div class="metric" id="lowStock">0</div></div>
+    <div class="panel"><div class="panel-head"><h2>Recent orders</h2><button class="secondary" onclick="loadOrders()">Refresh</button></div><div id="recentOrders" class="muted">Loading orders...</div></div>
+   </section>
+
+   <section id="page-products" class="hidden">
+    <div class="panel">
+     <h2>Add a product</h2>
+     <div class="grid2">
+      <div class="field"><label>Product name</label><input id="pName" placeholder="Large Pizza"></div>
+      <div class="field"><label>Category</label><input id="pCategory" placeholder="Pizza"></div>
+      <div class="field"><label>Price (Rs)</label><input id="pPrice" type="number" min="0" placeholder="1200"></div>
+      <div class="field"><label>Stock quantity</label><input id="pStock" type="number" min="0" placeholder="20"></div>
+     </div>
+     <button onclick="addProduct()">Save product</button>
+     <div id="productMessage" class="message"></div>
+    </div>
+    <div class="panel"><h2>Your products</h2><div id="productsTable" class="muted">Loading products...</div></div>
+   </section>
+
+   <section id="page-orders" class="hidden">
+    <div class="panel">
+     <h2>Create an order</h2>
+     <div class="grid2">
+      <div class="field"><label>Customer name</label><input id="customerName" placeholder="Customer name"></div>
+      <div class="field"><label>Customer phone</label><input id="customerPhone" placeholder="+92..."></div>
+     </div>
+     <div class="field"><label>Product</label><select id="orderProduct"></select></div>
+     <div class="field"><label>Quantity</label><input id="orderQuantity" type="number" min="1" value="1"></div>
+     <button onclick="createOrder()">Create order</button>
+     <div id="orderMessage" class="message"></div>
+    </div>
+    <div class="panel"><h2>All orders</h2><div id="ordersTable" class="muted">Loading orders...</div></div>
+   </section>
+
+   <section id="page-customers" class="hidden">
+    <div class="panel"><h2>Customers</h2><div id="customersTable" class="muted">Loading customers...</div></div>
+   </section>
+
+   <section id="page-settings" class="hidden">
+    <div class="panel">
+     <h2>Business settings</h2>
+     <p class="muted">Business profile information</p>
+     <p><b>Business:</b> <span id="settingBusiness"></span></p>
+     <p><b>Email:</b> <span id="settingEmail"></span></p>
+     <p><b>Phone:</b> <span id="settingPhone"></span></p>
+     <hr style="border:0;border-top:1px solid #eee;margin:20px 0">
+     <h2>WhatsApp connection</h2>
+     <p class="muted">WhatsApp is not connected yet. A real connection requires the official Meta WhatsApp Cloud API, a business phone number, access token and webhook configuration.</p>
+     <span class="tag pending">Not connected</span>
+    </div>
+   </section>
+  </main>
+ </div>
+</div>
+
+<script>
+let token = localStorage.getItem("pp_token") || "";
+let isLogin = false;
+let productsCache = [];
+let ordersCache = [];
+
+function toggleAuth(){
+  isLogin = !isLogin;
+  document.getElementById("registerFields").classList.toggle("hidden",isLogin);
+  document.getElementById("authButton").textContent = isLogin ? "Login" : "Create business account";
+  document.getElementById("switchText").textContent = isLogin ? "New business?" : "Already registered?";
+  document.getElementById("switchLink").textContent = isLogin ? "Register" : "Login";
+  showMessage("authMessage","","");
+}
+
+function showMessage(id,text,type){
+  const el=document.getElementById(id);
+  el.textContent=text;
+  el.className="message"+(type?" "+type:"");
+}
+
+async function api(url,options={}){
+  const headers={"Content-Type":"application/json",...(options.headers||{})};
+  if(token) headers.Authorization="Bearer "+token;
+  const response=await fetch(url,{...options,headers});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok) throw new Error(data.error||"Something went wrong");
+  return data;
+}
+
+async function submitAuth(){
+  try{
+    const email=document.getElementById("email").value.trim();
+    const password=document.getElementById("password").value;
+    let data;
+
+    if(isLogin){
+      data=await api("/api/login",{method:"POST",body:JSON.stringify({email,password})});
+    }else{
+      data=await api("/api/register",{method:"POST",body:JSON.stringify({
+        businessName:document.getElementById("businessName").value.trim(),
+        businessType:document.getElementById("businessType").value,
+        ownerName:document.getElementById("ownerName").value.trim(),
+        phone:document.getElementById("phone").value.trim(),
+        email,password
+      })});
+    }
+
+    token=data.token;
+    localStorage.setItem("pp_token",token);
+    await openApp();
+  }catch(error){
+    showMessage("authMessage",error.message,"error");
+  }
+}
+
+async function openApp(){
+  document.getElementById("authScreen").style.display="none";
+  document.getElementById("app").style.display="block";
+  try{
+    const me=await api("/api/me");
+    document.getElementById("businessLabel").textContent=me.businessName;
+    document.getElementById("settingBusiness").textContent=me.businessName;
+    document.getElementById("settingEmail").textContent=me.email;
+    document.getElementById("settingPhone").textContent=me.phone||"Not added";
+    await refreshAll();
+  }catch(error){
+    logout();
+    alert(error.message);
+  }
+}
+
+function logout(){
+  token="";
+  localStorage.removeItem("pp_token");
+  document.getElementById("app").style.display="none";
+  document.getElementById("authScreen").style.display="block";
+}
+
+function showPage(page,button){
+  document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+  document.getElementById("page-"+page).classList.remove("hidden");
+  document.querySelectorAll(".nav").forEach(n=>n.classList.remove("active"));
+  if(button) button.classList.add("active");
+  const titles={dashboard:"Dashboard",products:"Products",orders:"Orders",customers:"Customers",settings:"Settings"};
+  document.getElementById("pageTitle").textContent=titles[page];
+  if(page==="customers") renderCustomers();
+}
+
+async function refreshAll(){
+  await Promise.all([loadDashboard(),loadProducts(),loadOrders()]);
+}
+
+async function loadDashboard(){
+  const d=await api("/api/dashboard");
+  document.getElementById("revenue").textContent="Rs "+Number(d.revenue).toLocaleString();
+  document.getElementById("orderCount").textContent=d.orders;
+  document.getElementById("productCount").textContent=d.products;
+  document.getElementById("customerCount").textContent=d.customers;
+  document.getElementById("lowStock").textContent=d.lowStock;
+}
+
+async function loadProducts(){
+  productsCache=await api("/api/products");
+  const box=document.getElementById("productsTable");
+  if(!productsCache.length){box.textContent="No products added yet.";return;}
+  box.innerHTML=`<div class="tablewrap"><table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead><tbody>${productsCache.map(p=>`<tr><td>${escapeHTML(p.name)}</td><td>${escapeHTML(p.category||"")}</td><td>Rs ${p.price}</td><td>${p.stock}</td><td><button class="danger" onclick="deleteProduct('${p._id}')">Delete</button></td></tr>`).join("")}</tbody></table></div>`;
+  document.getElementById("orderProduct").innerHTML=productsCache.map(p=>`<option value="${p._id}">${escapeHTML(p.name)} — Rs ${p.price} (Stock: ${p.stock})</option>`).join("");
+}
+
+async function addProduct(){
+  try{
+    await api("/api/products",{method:"POST",body:JSON.stringify({
+      name:document.getElementById("pName").value,
+      category:document.getElementById("pCategory").value,
+      price:Number(document.getElementById("pPrice").value),
+      stock:Number(document.getElementById("pStock").value)
+    })});
+    showMessage("productMessage","Product saved successfully.","ok");
+    ["pName","pCategory","pPrice","pStock"].forEach(id=>document.getElementById(id).value="");
+    await loadProducts();await loadDashboard();
+  }catch(e){showMessage("productMessage",e.message,"error");}
+}
+
+async function deleteProduct(id){
+  if(!confirm("Delete this product?"))return;
+  try{await api("/api/products/"+id,{method:"DELETE"});await loadProducts();await loadDashboard();}
+  catch(e){alert(e.message);}
+}
+
+async function createOrder(){
+  try{
+    const productId=document.getElementById("orderProduct").value;
+    if(!productId) throw new Error("Please add a product first.");
+    const order=await api("/api/orders",{method:"POST",body:JSON.stringify({
+      customerName:document.getElementById("customerName").value,
+      customerPhone:document.getElementById("customerPhone").value,
+      items:[{productId,quantity:Number(document.getElementById("orderQuantity").value)}]
+    })});
+    showMessage("orderMessage","Order created. Total: Rs "+order.total,"ok");
+    document.getElementById("customerName").value="";
+    document.getElementById("customerPhone").value="";
+    await refreshAll();
+  }catch(e){showMessage("orderMessage",e.message,"error");}
+}
+
+async function loadOrders(){
+  ordersCache=await api("/api/orders");
+  const html=ordersCache.length?`<div class="tablewrap"><table><thead><tr><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Update</th></tr></thead><tbody>${ordersCache.map(o=>`<tr><td>${escapeHTML(o.customerName)}</td><td>${escapeHTML(o.customerPhone||"-")}</td><td>${o.items.map(i=>escapeHTML(i.name)+" × "+i.quantity).join(", ")}</td><td>Rs ${o.total}</td><td><span class="tag ${o.status==="Pending"?"pending":o.status==="Cancelled"?"cancel":""}">${o.status}</span></td><td><select onchange="updateStatus('${o._id}',this.value)"><option ${o.status==="Pending"?"selected":""}>Pending</option><option ${o.status==="Preparing"?"selected":""}>Preparing</option><option ${o.status==="Completed"?"selected":""}>Completed</option><option ${o.status==="Cancelled"?"selected":""}>Cancelled</option></select></td></tr>`).join("")}</tbody></table></div>`:"No orders yet.";
+  document.getElementById("ordersTable").innerHTML=html;
+  document.getElementById("recentOrders").innerHTML=html;
+}
+
+async function updateStatus(id,status){
+  try{await api("/api/orders/"+id+"/status",{method:"PATCH",body:JSON.stringify({status})});await loadDashboard();await loadOrders();}
+  catch(e){alert(e.message);}
+}
+
+function renderCustomers(){
+  const map=new Map();
+  ordersCache.forEach(o=>{
+    const key=o.customerPhone||o.customerName;
+    if(!map.has(key))map.set(key,{name:o.customerName,phone:o.customerPhone||"-",orders:0,total:0});
+    const c=map.get(key);c.orders++;c.total+=o.total;
+  });
+  const list=[...map.values()];
+  document.getElementById("customersTable").innerHTML=list.length?`<div class="tablewrap"><table><thead><tr><th>Name</th><th>Phone</th><th>Orders</th><th>Total spent</th></tr></thead><tbody>${list.map(c=>`<tr><td>${escapeHTML(c.name)}</td><td>${escapeHTML(c.phone)}</td><td>${c.orders}</td><td>Rs ${c.total}</td></tr>`).join("")}</tbody></table></div>`:"Customers will appear here after you create orders.";
+}
+
+function escapeHTML(value){
+  return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+if(token) openApp();
+</script>
+</body>
+</html>
